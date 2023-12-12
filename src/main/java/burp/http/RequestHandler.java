@@ -3,7 +3,7 @@ package burp.http;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.scanner.audit.issues.AuditIssue;
-import burp.vendor.CheckAKSK;
+import burp.vendor.Type;
 import burp.vendor.aliyun.OSS;
 import burp.vendor.huawei.OBS;
 import burp.vendor.tencent.COS;
@@ -14,6 +14,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,16 +42,32 @@ public class RequestHandler {
         String host = baseRequestResponse.request().httpService().host();
         String[] split = host.split("\\.");
         String currentDomain = split[split.length - 2] + "." + split[split.length - 1];
-        List<AuditIssue> auditIssues = new CheckAKSK(baseRequestResponse).checkVul();
-        if (currentDomain.equals(Tencent.getDomain())){
+        List<AuditIssue> auditIssues = new ArrayList<>();
+
+        //根据server头判断
+        Type typeByServer = getTypeByServer(baseRequestResponse);
+        if (typeByServer == AliYun){
             auditIssues.addAll(new COS(baseRequestResponse).checkVul());
         }
-        if (currentDomain.equals(AliYun.getDomain())){
+        else if (typeByServer == Tencent){
             auditIssues.addAll(new OSS(baseRequestResponse).checkVul());
         }
-        if (currentDomain.equals(HauWeiCloud.getDomain())){
+        else if (typeByServer == HauWeiCloud){
             auditIssues.addAll(new OBS(baseRequestResponse).checkVul());
         }
+        //如果无法通过server判断则使用域名
+        else {
+            if (currentDomain.equals(Tencent.getDomain())){
+                auditIssues.addAll(new COS(baseRequestResponse).checkVul());
+            }
+            if (currentDomain.equals(AliYun.getDomain())){
+                auditIssues.addAll(new OSS(baseRequestResponse).checkVul());
+            }
+            if (currentDomain.equals(HauWeiCloud.getDomain())){
+                auditIssues.addAll(new OBS(baseRequestResponse).checkVul());
+            }
+        }
+
         return auditIssues;
     }
 

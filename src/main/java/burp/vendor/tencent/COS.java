@@ -1,5 +1,6 @@
 package burp.vendor.tencent;
 
+import burp.api.montoya.http.message.HttpHeader;
 import burp.common.Base;
 import burp.common.Constant;
 import burp.common.IAction;
@@ -37,11 +38,18 @@ public class COS implements Base {
         HttpRequestResponse get = Main.api.http().sendRequest(HttpRequest.httpRequestFromUrl(currentUrl).
                 withMethod("GET").
                 withAddedHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.5414.75 Safari/537.36"));
-        if (get.response().body().countMatches(ByteArray.byteArray("<Permission>")) != 0){
+
+
+        boolean isAclResponse = false;
+
+        //解决某些静态网站的误报
+        for (HttpHeader httpHeader : get.response().headers()) {
+            if (httpHeader.name().equals("Content-Type") && httpHeader.value().equals("text/html"))  isAclResponse = true;
+        }
+        if (isAclResponse && get.response().body().countMatches(ByteArray.byteArray("<Permission>")) != 0){
             auditIssueList.add(AuditIssue.auditIssue("ACL readable","ACL readable","",get.url(), AuditIssueSeverity.HIGH,
                     AuditIssueConfidence.FIRM,"","",AuditIssueSeverity.HIGH,get));
         }
-
     }
 
     public COS(HttpRequestResponse baseRequestResponse){

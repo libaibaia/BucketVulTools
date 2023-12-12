@@ -1,5 +1,10 @@
 package burp.vendor;
 
+import burp.api.montoya.http.message.HttpHeader;
+import burp.api.montoya.http.message.HttpRequestResponse;
+
+import java.util.List;
+
 public enum Type {
 
     Tencent("腾讯云","myqcloud.com",0),
@@ -40,6 +45,21 @@ public enum Type {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    public static Type getTypeByServer(HttpRequestResponse base){
+        List<HttpHeader> headers = base.response().headers();
+        for (HttpHeader header : headers) {
+            if (header.name().equals("Server") && header.value().equals("AliyunOSS"))
+                return AliYun;
+            if (header.name().equals("Server") && header.value().equals("tencent-cos")){
+                return Tencent;
+            }
+            if (header.name().equals("Server") && header.value().equals("OBS")){
+                return HauWeiCloud;
+            }
+        }
+        return null;
     }
 
 }

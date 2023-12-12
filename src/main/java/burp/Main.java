@@ -15,11 +15,11 @@ public class Main implements BurpExtension {
     @Override
     public void initialize(MontoyaApi api) {
         Main.api = api;
-        api.extension().setName("ex");
-        api.userInterface().registerSuiteTab("AkSkPane", UI.getUI(
-                api.userInterface().createHttpRequestEditor(),
-                api.userInterface().createHttpResponseEditor())
-        );
+        api.extension().setName("BucketVulTool");
+//        api.userInterface().registerSuiteTab("AkSkPane", UI.getUI(
+//                api.userInterface().createHttpRequestEditor(),
+//                api.userInterface().createHttpResponseEditor())
+//        );
         api.scanner().registerScanCheck(new IScanCheck());
     }
 }
